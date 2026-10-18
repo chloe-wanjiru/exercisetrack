@@ -11,7 +11,7 @@
   --lime: #b9c96a;
   --yellow: #ead9a9;
   --mono: 'DM Mono', monospace;
-  --sans: 'Manrope', sans-serif;
+  --sans: Calibri, 'Segoe UI', sans-serif;
 }
 
 * { box-sizing: border-box; }
