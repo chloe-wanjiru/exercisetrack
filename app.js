@@ -1,5 +1,6 @@
 const calendar = document.querySelector('#calendar');
 const sessionState = { chloe: {}, brian: {} };
+const notesState = { chloe: {}, brian: {} };
 const workouts = {
   chloe: { name: 'Squats', detail: '10 reps · bodyweight', duration: '10 REPS' },
   brian: { name: 'Press ups', detail: '10 reps · bodyweight', duration: '10 REPS' },
@@ -42,7 +43,7 @@ function renderSessions() {
   document.querySelector('#session-panel').innerHTML = sessions.map((session, index) => {
     const completed = sessionState[activePerson][`${dateKey}-${session.id}`];
     return `<div class="session-card ${index === 0 ? 'morning' : 'evening'}"><div class="session-top"><span class="session-type">${session.label}</span><span class="duration">${session.duration}</span></div><h3>${session.title}</h3><p>${session.detail}</p><div class="session-footer"><span>${session.time}</span><button class="complete-button${completed ? ' completed' : ''}" data-session="${session.id}">${completed ? 'Completed' : 'Log after workout'} <span>✓</span></button></div></div>`;
-  }).join('');
+  }).join('') + `<div class="extra-note"><div class="extra-note-heading"><span>OPTIONAL EXTRA</span><span>1 line is plenty</span></div><label for="extra-note-input">What else did you do today?</label><textarea id="extra-note-input" maxlength="140" placeholder="e.g. Walked home from work...">${notesState[activePerson][dateKey] || ''}</textarea><button class="save-note" type="button">Save note <span>↗</span></button></div>`;
   document.querySelectorAll('.complete-button').forEach((button) => {
     button.addEventListener('click', () => {
       const key = `${dateKey}-${button.dataset.session}`;
@@ -51,6 +52,12 @@ function renderSessions() {
       renderCalendar(activePerson);
       updateProgress();
     });
+  });
+  document.querySelector('.save-note').addEventListener('click', () => {
+    const note = document.querySelector('#extra-note-input').value.trim();
+    if (note) notesState[activePerson][dateKey] = note;
+    else delete notesState[activePerson][dateKey];
+    renderSessions();
   });
 }
 
