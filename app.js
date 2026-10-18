@@ -1,6 +1,7 @@
 const calendar = document.querySelector('#calendar');
 const sessionState = { chloe: {}, brian: {} };
 const notesState = { chloe: {}, brian: {} };
+const storageKey = 'stride-tracker-data';
 const workouts = {
   chloe: { name: 'Squats', detail: '10 reps · bodyweight', duration: '10 REPS' },
   brian: { name: 'Press ups', detail: '10 reps · bodyweight', duration: '10 REPS' },
@@ -13,6 +14,24 @@ const dates = Array.from({ length: 31 }, (_, index) => {
 });
 let activePerson = 'chloe';
 let selectedIndex = 0;
+
+function loadSavedData() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    Object.assign(sessionState, saved.sessions || {});
+    Object.assign(notesState, saved.notes || {});
+  } catch (error) {
+    // Keep the tracker usable when browser storage is unavailable.
+  }
+}
+
+function saveData() {
+  try {
+    localStorage.setItem(storageKey, JSON.stringify({ sessions: sessionState, notes: notesState }));
+  } catch (error) {
+    // Progress still works for the current page when storage is unavailable.
+  }
+}
 
 function dateLabel(date) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
@@ -50,6 +69,7 @@ function renderSessions() {
     button.addEventListener('click', () => {
       const key = `${dateKey}-${button.dataset.session}`;
       sessionState[activePerson][key] = !sessionState[activePerson][key];
+      saveData();
       renderSessions();
       renderCalendar(activePerson);
       updateProgress();
@@ -59,6 +79,7 @@ function renderSessions() {
     const note = document.querySelector('#extra-note-input').value.trim();
     if (note) notesState[activePerson][dateKey] = note;
     else delete notesState[activePerson][dateKey];
+    saveData();
     renderSessions();
   });
 }
@@ -100,6 +121,7 @@ document.querySelectorAll('.view-toggle button').forEach((button) => {
   });
 });
 
+loadSavedData();
 renderCalendar();
 renderSessions();
 updateProgress();
