@@ -18,8 +18,10 @@ let selectedIndex = 0;
 function loadSavedData() {
   try {
     const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
-    Object.assign(sessionState, saved.sessions || {});
-    Object.assign(notesState, saved.notes || {});
+    Object.assign(sessionState.chloe, saved.sessions?.chloe || {});
+    Object.assign(sessionState.brian, saved.sessions?.brian || {});
+    Object.assign(notesState.chloe, saved.notes?.chloe || {});
+    Object.assign(notesState.brian, saved.notes?.brian || {});
   } catch (error) {
     // Keep the tracker usable when browser storage is unavailable.
   }
@@ -31,6 +33,16 @@ function saveData() {
   } catch (error) {
     // Progress still works for the current page when storage is unavailable.
   }
+}
+
+function saveToday() {
+  const dateKey = dates[selectedIndex].toISOString().slice(0, 10);
+  const noteInput = document.querySelector('#extra-note-input');
+  const note = noteInput ? noteInput.value.trim() : '';
+  if (note) notesState[activePerson][dateKey] = note;
+  else delete notesState[activePerson][dateKey];
+  saveData();
+  renderSessions('Saved just now');
 }
 
 function dateLabel(date) {
@@ -51,7 +63,7 @@ function updateProgress() {
   });
 }
 
-function renderSessions() {
+function renderSessions(saveMessage = '') {
   const date = dates[selectedIndex];
   const dateKey = date.toISOString().slice(0, 10);
   const workout = workouts[activePerson];
@@ -64,7 +76,7 @@ function renderSessions() {
   document.querySelector('#session-panel').innerHTML = sessions.map((session, index) => {
     const completed = sessionState[activePerson][`${dateKey}-${session.id}`];
     return `<div class="session-card ${index === 0 ? 'morning' : 'evening'}"><div class="session-top"><span class="session-type">${session.label}</span><span class="duration">${session.duration}</span></div><h3>${session.title}</h3><p>${session.detail}</p><div class="session-footer"><span>${session.time}</span><button class="complete-button${completed ? ' completed' : ''}" data-session="${session.id}">${completed ? 'Completed' : 'Log after workout'} <span>✓</span></button></div></div>`;
-  }).join('') + `<div class="extra-note"><div class="extra-note-heading"><span>OPTIONAL EXTRA</span><span>1 line is plenty</span></div><label for="extra-note-input">What else did you do today?</label><textarea id="extra-note-input" maxlength="140" placeholder="e.g. Walked home from work...">${notesState[activePerson][dateKey] || ''}</textarea><button class="save-note" type="button">Save note <span>↗</span></button></div>`;
+  }).join('') + `<div class="extra-note"><div class="extra-note-heading"><span>OPTIONAL EXTRA</span><span>1 line is plenty</span></div><label for="extra-note-input">What else did you do today?</label><textarea id="extra-note-input" maxlength="140" placeholder="e.g. Walked home from work...">${notesState[activePerson][dateKey] || ''}</textarea><button class="save-note" type="button">Save note <span>↗</span></button></div><div class="save-day-row"><button class="save-day-button" id="save-day-button" type="button">Save today's workout <span>✓</span></button><span class="save-status">${saveMessage || 'Changes save automatically'}</span></div>`;
   document.querySelectorAll('.complete-button').forEach((button) => {
     button.addEventListener('click', () => {
       const key = `${dateKey}-${button.dataset.session}`;
@@ -82,6 +94,7 @@ function renderSessions() {
     saveData();
     renderSessions();
   });
+  document.querySelector('#save-day-button').addEventListener('click', saveToday);
 }
 
 function renderCalendar(person = activePerson) {
