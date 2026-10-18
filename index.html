@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stride · monthly movement plan</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="Stride home"><span class="brand-mark">↗</span><span>stride</span></a>
+        <nav class="topnav" aria-label="Primary navigation"><a class="active" href="#plan">Plan</a><a href="#insights">Insights</a></nav>
+        <div class="header-actions"><button class="icon-button" aria-label="Notifications">⌁</button><button class="profile" aria-label="Open profile">CM</button></div>
+      </header>
+
+      <section class="intro" id="plan">
+        <div><p class="eyebrow">OCT 18 — NOV 17, 2026 <span class="live-dot"></span> IN MOTION</p><h1>A month that moves<br /><em>with you.</em></h1><p class="intro-copy">Two people. Two daily sessions. One shared rhythm.</p></div>
+        <div class="month-picker"><button class="arrow" aria-label="Previous month">←</button><strong>Oct 18 <span>— Nov 17</span></strong><button class="arrow" aria-label="Next month">→</button></div>
+      </section>
+
+      <section class="stats-grid" aria-label="Monthly overview">
+        <article class="stat-card"><div class="stat-heading"><span>COMPLETION</span><span class="completion-dot">●</span></div><div class="stat-value coral-text" id="completion-value">0<small>%</small></div><div class="meter"><span id="completion-meter" style="width:0%"></span></div><p id="completion-copy">0 of 124 sessions completed</p></article>
+      </section>
+
+      <section class="workspace">
+        <div class="schedule-column">
+          <div class="section-head"><div><p class="eyebrow">DAILY RHYTHM</p><h2>31-day plan</h2></div><div class="view-toggle" role="group" aria-label="Calendar view"><button class="selected">Month</button><button>Week</button></div></div>
+          <div class="people-switcher" role="tablist" aria-label="Person schedule"><button class="person active" data-person="chloe" role="tab"><span class="avatar coral">CM</span><span><strong>Chloe.M</strong><small class="person-progress">0 / 62 sessions</small></span><span class="person-check">✓</span></button><button class="person" data-person="brian" role="tab"><span class="avatar lime">BM</span><span><strong>Brian.M</strong><small class="person-progress">0 / 62 sessions</small></span><span class="person-check">✓</span></button></div>
+          <div class="calendar-wrap"><div class="calendar-label"><span>OCT 18 — NOV 17, 2026</span><span>Morning / Evening · click a day</span></div><div class="calendar" id="calendar" aria-label="30-day workout schedule"></div></div>
+        </div>
+
+        <aside class="side-column" id="insights">
+          <div class="side-head"><div><p class="eyebrow" id="selected-date-label">TODAY · OCT 18</p><h2>Keep the flow.</h2></div><span class="today-mark" id="selected-day">18</span></div>
+          <div id="session-panel"></div>
+          <div class="quote"><span class="quote-mark">“</span><p>Small steps, repeated often, become a very long way.</p><small>— your future self</small></div>
+          <div class="legend"><span><i class="legend-dot coral-dot"></i>Complete</span><span><i class="legend-dot pale-dot"></i>Planned</span><span><i class="legend-dot dark-dot"></i>Rest day</span></div>
+        </aside>
+      </section>
+      <footer><span>STRIDE / PERSONAL MOVEMENT SYSTEM</span><span>SYNCED JUST NOW <b>•</b></span></footer>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
