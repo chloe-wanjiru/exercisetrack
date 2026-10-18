@@ -110,6 +110,7 @@ h1 em { font-style: normal; color: var(--copper-bright); }
 .save-day-button { border: 0; background: var(--ink); color: var(--cream); padding: 11px 14px; font: 600 10px var(--mono); cursor: pointer; transition: background .2s, transform .2s; }
 .save-day-button:hover { background: var(--copper); transform: translateY(-1px); }
 .save-day-button.saved { background: var(--copper); }
+.save-note.saved { background: var(--copper); }
 .save-day-button span { color: var(--lime); margin-left: 6px; }
 .save-status { color: var(--muted); font: 500 9px var(--mono); }
 .quote { background: var(--yellow); color: var(--ink); padding: 20px 22px; margin-top: 24px; }

@@ -92,7 +92,9 @@ function renderSessions(saveMessage = '') {
     if (note) notesState[activePerson][dateKey] = note;
     else delete notesState[activePerson][dateKey];
     saveData();
-    renderSessions();
+    const saveNoteButton = document.querySelector('.save-note');
+    saveNoteButton.classList.add('saved');
+    saveNoteButton.innerHTML = 'Note saved <span>✓</span>';
   });
   document.querySelector('#save-day-button').addEventListener('click', saveToday);
 }
