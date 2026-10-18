@@ -19,11 +19,13 @@ function dateLabel(date) {
 }
 
 function updateProgress() {
-  const total = Object.values(sessionState).reduce((sum, person) => sum + Object.keys(person).length, 0);
-  const percent = Math.round((total / 124) * 100);
-  document.querySelector('#completion-value').innerHTML = `${percent}<small>%</small>`;
-  document.querySelector('#completion-meter').style.width = `${percent}%`;
-  document.querySelector('#completion-copy').textContent = `${total} of 124 sessions completed`;
+  Object.keys(sessionState).forEach((person) => {
+    const count = Object.keys(sessionState[person]).length;
+    const percent = Math.round((count / 62) * 100);
+    document.querySelector(`#${person}-completion-value`).textContent = `${percent}%`;
+    document.querySelector(`#${person}-completion-meter`).style.width = `${percent}%`;
+    document.querySelector(`#${person}-completion-copy`).textContent = `${count} of 62 sessions`;
+  });
   document.querySelectorAll('.person').forEach((button) => {
     const count = Object.keys(sessionState[button.dataset.person]).length;
     button.querySelector('.person-progress').textContent = `${count} / 62 sessions`;
