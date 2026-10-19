@@ -4,11 +4,144 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Stride · shared workout log</title>
-    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='16' fill='%23ad6848'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='18' font-weight='bold' fill='%2328231e'%3E%E2%86%97%3C/text%3E%3C/svg%3E" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
+    
+    <!-- Firebase Compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <style>
+      :root {
+        --ink: #28231e; --ink-soft: #423930; --muted: #887d71; --line: rgba(58, 47, 38, .14);
+        --paper: #f4efe7; --card: #fffdf9; --cream: #f8f4ec; --copper: #ad6848;
+        --copper-bright: #c47a57; --lime: #b9c96a; --yellow: #ead9a9;
+        --mono: 'DM Mono', monospace; --sans: Calibri, 'Segoe UI', sans-serif;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); font-size: 14px; }
+      body:before { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .08; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.08'/%3E%3C/svg%3E"); mix-blend-mode: multiply; z-index: 10; }
+      .celebration { position: fixed; inset: 0; z-index: 20; pointer-events: none; display: grid; place-items: center; overflow: hidden; }
+      .celebration-copy { display: flex; flex-direction: column; align-items: center; gap: 4px; transform: rotate(-5deg); animation: congrats-pop .55s cubic-bezier(.2,1.5,.4,1) both; }
+      .late-message { color: #c93434; font-size: clamp(18px, 3vw, 32px); font-weight: 800; letter-spacing: 1px; text-transform: lowercase; }
+      .celebration-title { color: var(--copper); font-size: clamp(42px, 8vw, 105px); font-weight: 800; letter-spacing: -5px; text-shadow: 4px 4px 0 var(--ink), -2px -2px 0 var(--cream); }
+      .graffiti { position: absolute; top: -60px; left: var(--x); color: var(--ink); background: var(--confetti); font: 800 20px var(--sans); padding: 7px 11px; border: 3px solid var(--ink); box-shadow: 5px 5px 0 var(--ink); animation: graffiti-fall 1.9s ease-in forwards; animation-delay: var(--delay); transform: rotate(var(--rotate)); }
+      @keyframes congrats-pop { from { opacity: 0; transform: scale(.65) rotate(-12deg); } to { opacity: 1; transform: scale(1) rotate(0deg); } }
+      @keyframes graffiti-fall { 0% { opacity: 0; transform: translateY(0) rotate(-18deg); } 12% { opacity: 1; } 100% { opacity: 0; transform: translateY(112vh) rotate(320deg); } }
+      .shell { max-width: 1440px; margin: auto; padding: 0 5.5vw; }
+      .topbar { height: 82px; display: flex; align-items: center; border-bottom: 1px solid var(--line); }
+      .brand { display: flex; gap: 9px; align-items: center; font-size: 18px; font-weight: 800; letter-spacing: -1px; color: var(--ink); text-decoration: none; }
+      .brand-mark { display: grid; place-items: center; background: var(--copper); height: 27px; width: 27px; border-radius: 50%; font-size: 20px; line-height: 1; color: var(--ink); }
+      .topnav { display: flex; gap: 34px; margin-left: 86px; height: 100%; align-items: center; }
+      .topnav a { height: 100%; display: flex; align-items: center; text-decoration: none; color: var(--muted); font-size: 12px; font-weight: 700; position: relative; }
+      .topnav a.active { color: var(--ink); }
+      .topnav a.active:after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--copper-bright); }
+      .header-actions { margin-left: auto; display: flex; gap: 18px; align-items: center; }
+      .icon-button, .arrow { border: 0; background: transparent; cursor: pointer; color: var(--ink); font-size: 20px; }
+      .profile { border: 1px solid var(--ink); background: var(--ink); color: var(--cream); width: 36px; height: 36px; border-radius: 50%; font-size: 10px; font-weight: 800; letter-spacing: .4px; }
+      .intro { display: flex; justify-content: space-between; align-items: end; padding: 64px 0 46px; }
+      .eyebrow { font: 500 9px var(--mono); letter-spacing: 1.7px; color: var(--muted); margin: 0 0 18px; }
+      .live-dot { display: inline-block; width: 6px; height: 6px; background: var(--copper-bright); border-radius: 50%; margin: 0 6px 1px 7px; box-shadow: 0 0 14px var(--copper); }
+      h1, h2, h3, p { margin-top: 0; }
+      h1 { font-size: clamp(42px, 4.8vw, 68px); letter-spacing: -2.5px; line-height: .96; margin: 0; font-weight: 700; }
+      h1 em { font-style: normal; color: var(--copper-bright); }
+      .intro-copy { font-size: 14px; color: var(--muted); margin: 26px 0 0; }
+      .month-picker { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+      .month-picker strong { font-size: 13px; color: var(--ink); }
+      .month-picker strong span { color: var(--muted); font-weight: 500; }
+      .arrow { border: 1px solid var(--line); width: 35px; height: 35px; border-radius: 50%; font-size: 15px; transition: border-color .2s, color .2s; }
+      .arrow:hover { border-color: var(--copper); color: var(--copper-bright); }
+      .stats-grid { display: grid; grid-template-columns: minmax(280px, 500px); gap: 14px; margin-bottom: 68px; }
+      .stat-card { position: relative; background: var(--card); padding: 22px 25px 20px; min-height: 171px; border: 1px solid var(--line); box-shadow: 0 18px 50px rgba(74,54,39,.08); }
+      .stat-heading { font: 500 9px var(--mono); letter-spacing: 1.2px; color: var(--muted); display: flex; justify-content: space-between; }
+      .stat-value { font-size: 42px; letter-spacing: -2.5px; font-weight: 700; margin: 21px 0 4px; }
+      .stat-value small { font: 500 12px var(--mono); letter-spacing: 0; margin-left: 6px; color: var(--muted); }
+      .coral-text, .completion-label span { color: var(--copper-bright); }
+      .completion-dot { color: var(--copper-bright); font-size: 12px; }
+      .meter { height: 4px; background: rgba(58,47,38,.1); margin: 12px 0 15px; }
+      .meter span { display: block; background: var(--copper-bright); height: 100%; box-shadow: 0 0 12px rgba(240,173,130,.35); }
+      .stat-card p { font-size: 10px; color: var(--muted); margin: 0; }
+      .completion-card { min-width: 360px; }
+      .person-completion { margin-top: 20px; }
+      .completion-label { display: flex; justify-content: space-between; align-items: center; font: 500 11px var(--mono); }
+      .person-completion .meter { margin: 8px 0 7px; }
+      .person-completion p { font-size: 10px; margin: 0; }
+      .workspace { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(300px, .75fr); gap: 52px; padding-bottom: 65px; }
+      .section-head, .side-head { display: flex; justify-content: space-between; align-items: end; margin-bottom: 26px; }
+      .section-head h2, .side-head h2 { font-size: 28px; letter-spacing: -1.5px; margin: 0; }
+      .view-toggle { display: flex; border: 1px solid var(--line); padding: 3px; gap: 2px; }
+      .view-toggle button { border: 0; background: transparent; font: 500 10px var(--mono); padding: 8px 13px; color: var(--muted); cursor: pointer; }
+      .view-toggle .selected { background: var(--cream); color: var(--ink); }
+      .people-switcher { display: flex; gap: 7px; margin-bottom: 23px; }
+      .person { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); background: transparent; color: var(--ink); padding: 9px 13px; text-align: left; cursor: pointer; min-width: 190px; transition: background .2s, border-color .2s; }
+      .person:hover { border-color: rgba(58,47,38,.4); }
+      .person.active { background: var(--card); border-color: var(--copper); }
+      .avatar { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; font: 500 9px var(--mono); }
+      .avatar.coral { background: var(--copper); color: var(--ink); }
+      .avatar.lime { background: var(--lime); color: var(--ink); }
+      .person strong, .person small { display: block; }
+      .person strong { font-size: 12px; }
+      .person small { font-size: 10px; color: var(--muted); margin-top: 2px; }
+      .person-check { font-size: 12px; color: var(--copper-bright); margin-left: auto; }
+      .calendar-wrap { border-top: 1px solid var(--line); }
+      .calendar-label { display: flex; justify-content: space-between; padding: 15px 12px 13px; font: 500 9px var(--mono); letter-spacing: 1px; color: var(--muted); }
+      .calendar { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+      .day { min-height: 92px; background: var(--card); border: 1px solid var(--line); padding: 11px; position: relative; transition: transform .18s, border-color .18s, background .18s; }
+      .day:hover { transform: translateY(-2px); border-color: rgba(240,173,130,.65); }
+      .day.selected-day { background: #f0e4d4; border-color: var(--copper-bright); box-shadow: 0 8px 28px rgba(74,54,39,.12); }
+      .day.today { border: 2px solid var(--copper-bright); background: #f5e7d7; box-shadow: inset 0 0 0 1px var(--copper); padding: 10px; }
+      .day-number { font: 500 10px var(--mono); color: var(--muted); display: flex; justify-content: space-between; }
+      .today-label { font: 500 8px var(--mono); background: var(--copper); color: var(--ink); padding: 3px 5px; }
+      .session-pill { height: 22px; margin-top: 8px; font: 500 8px var(--mono); display: flex; align-items: center; padding: 0 7px; gap: 5px; }
+      .session-pill:before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+      .done { background: rgba(216,237,136,.12); color: var(--lime); }
+      .planned { background: #f2eee8; color: var(--muted); }
+      .side-column { border-left: 1px solid var(--line); padding-left: 39px; }
+      .today-mark { font: 500 11px var(--mono); background: var(--copper); color: var(--ink); width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; }
+      .session-card { padding: 18px 20px; margin-bottom: 10px; border: 1px solid var(--line); background: var(--card); }
+      .session-card.morning { border-top: 2px solid var(--copper-bright); }
+      .session-card.evening { border-top: 2px solid var(--lime); }
+      .session-top, .session-footer { display: flex; justify-content: space-between; align-items: center; }
+      .session-type, .duration { font: 500 9px var(--mono); letter-spacing: .5px; color: var(--muted); }
+      .session-card h3 { font-size: 18px; letter-spacing: -.8px; margin: 17px 0 3px; }
+      .session-card p { font-size: 11px; color: var(--muted); margin-bottom: 22px; }
+      .session-footer { font: 500 10px var(--mono); color: var(--muted); }
+      .complete-button, .save-note { border: 0; background: var(--cream); color: var(--ink); padding: 8px 10px; font: 500 9px var(--mono); cursor: pointer; transition: background .2s, color .2s; }
+      .complete-button:hover, .save-note:hover { background: var(--copper-bright); }
+      .complete-button.completed { background: var(--copper); }
+      .complete-button span, .save-note span { color: var(--copper); margin-left: 5px; }
+      .extra-note { background: var(--card); border: 1px solid var(--line); padding: 17px 20px; margin-top: 10px; }
+      .extra-note-heading { display: flex; justify-content: space-between; color: var(--muted); font: 500 9px var(--mono); letter-spacing: .5px; }
+      .extra-note label { display: block; font-size: 12px; font-weight: 700; margin: 13px 0 8px; }
+      .extra-note textarea { width: 100%; min-height: 58px; resize: vertical; border: 1px solid var(--line); background: #f7f3ed; padding: 10px; font: 400 11px var(--sans); color: var(--ink); outline: none; }
+      .extra-note textarea:focus { border-color: var(--copper); }
+      .extra-note textarea::placeholder { color: #747871; }
+      .save-day-row { display: flex; align-items: center; gap: 12px; margin-top: 15px; }
+      .save-day-button { border: 0; background: var(--ink); color: var(--cream); padding: 11px 14px; font: 600 10px var(--mono); cursor: pointer; transition: background .2s, transform .2s; }
+      .save-day-button:hover { background: var(--copper); transform: translateY(-1px); }
+      .save-day-button.saved { background: var(--copper); }
+      .save-note.saved { background: var(--copper); }
+      .save-day-button span { color: var(--lime); margin-left: 6px; }
+      .save-status { color: var(--muted); font: 500 9px var(--mono); }
+      .app-toast { position: fixed; right: 24px; bottom: 24px; z-index: 30; background: var(--ink); color: var(--cream); padding: 12px 15px; border-left: 3px solid var(--copper); font: 500 10px var(--mono); box-shadow: 0 12px 30px rgba(74,54,39,.16); animation: toast-in .2s ease-out both; }
+      @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+      .quote { background: var(--yellow); color: var(--ink); padding: 20px 22px; margin-top: 24px; }
+      .quote-mark { font-size: 37px; line-height: .5; color: #9c7035; }
+      .quote p { font-size: 16px; line-height: 1.35; letter-spacing: -.4px; margin: 9px 0 13px; }
+      .quote small { font: 500 10px var(--mono); color: #806332; }
+      .legend { display: flex; gap: 15px; margin-top: 22px; font: 500 9px var(--mono); color: var(--muted); }
+      .legend-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; }
+      .coral-dot { background: var(--copper-bright); }
+      .pale-dot { background: #626760; }
+      .dark-dot { background: var(--ink); }
+      footer { border-top: 1px solid var(--line); display: flex; justify-content: space-between; padding: 20px 0 27px; font: 500 9px var(--mono); letter-spacing: 1px; color: var(--muted); }
+      footer b { color: var(--copper-bright); margin-left: 6px; }
+      @media (max-width: 900px) { .shell { padding: 0 5vw; } .workspace { grid-template-columns: 1fr; gap: 50px; } .side-column { border-left: 0; border-top: 1px solid var(--line); padding: 34px 0 0; } }
+      @media (max-width: 560px) { .topnav { margin-left: 32px; gap: 18px; } .intro { display: block; padding-top: 52px; } .month-picker { margin-top: 28px; justify-content: space-between; } .stats-grid { grid-template-columns: 1fr; gap: 8px; margin-bottom: 45px; } .completion-card { min-width: 0; } .workspace { gap: 38px; } .people-switcher { overflow: auto; } .person { min-width: 175px; } .calendar { grid-template-columns: repeat(3, 1fr); } .day { min-height: 83px; padding: 8px; } .day.today { padding: 7px; } .session-pill { font-size: 8px; padding: 0 4px; } .calendar-label { font-size: 8px; } .intro h1 { font-size: 48px; } .header-actions { gap: 11px; } footer { font-size: 8px; } }
+    </style>
   </head>
   <body>
     <main class="shell">
@@ -40,8 +173,321 @@
           <div class="legend"><span><i class="legend-dot coral-dot"></i>Complete</span><span><i class="legend-dot pale-dot"></i>Planned</span><span><i class="legend-dot dark-dot"></i>Rest day</span></div>
         </aside>
       </section>
-      <footer><span>STRIDE / SHARED WORKOUT LOG</span><span>SYNCED JUST NOW <b>•</b></span></footer>
+      <footer><span>STRIDE / SHARED WORKOUT LOG</span><span id="sync-status">CONNECTING <b>•</b></span></footer>
     </main>
-    <script src="app.js"></script>
+
+    <script>
+// ==========================================
+// 1. FIREBASE CONFIGURATION (YOUR KEYS)
+// ==========================================
+const firebaseConfig = {
+  apiKey: "AIzaSyDySIycZQGOFjP0IhOyXt-1fHOxtKhF50A",
+  authDomain: "stride-tracker-e8df8.firebaseapp.com",
+  projectId: "stride-tracker-e8df8",
+  storageBucket: "stride-tracker-e8df8.firebasestorage.app",
+  messagingSenderId: "198780435343",
+  appId: "1:198780435343:web:8a8cb3d6be4af5a6c969fa"
+};
+
+// ==========================================
+// 2. APP INITIALIZATION & STATE
+// ==========================================
+const calendar = document.querySelector('#calendar');
+const sessionState = { chloe: {}, brian: {} };
+const notesState = { chloe: {}, brian: {} };
+const savedState = { chloe: {}, brian: {} };
+const storageKey = 'stride-tracker-data';
+const workouts = {
+  chloe: { name: 'Squats', detail: '10 reps · bodyweight', duration: '10 REPS' },
+  brian: { name: 'Press ups', detail: '10 reps · bodyweight', duration: '10 REPS' },
+};
+const sessionTimes = { morning: '07:30:00', evening: '18:15:00' };
+const lateThreshold = 12 * 60 * 60 * 1000;
+const startDate = new Date('2026-10-18T12:00:00');
+const dates = Array.from({ length: 31 }, (_, index) => {
+  const date = new Date(startDate);
+  date.setDate(startDate.getDate() + index);
+  return date;
+});
+let activePerson = 'chloe';
+let viewMode = 'month';
+let currentSaveMessage = '';
+let db = null;
+let docRef = null;
+let useCloud = false;
+
+// Initialize Firebase
+try {
+  firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+  docRef = db.collection('stride').doc('shared-data');
+  useCloud = true;
+} catch (error) {
+  console.error("Firebase init failed, falling back to local storage.", error);
+}
+
+// ==========================================
+// 3. HELPER FUNCTIONS
+// ==========================================
+function kenyaDateKey(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Africa/Nairobi', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(date).reduce((values, part) => {
+    values[part.type] = part.value;
+    return values;
+  }, {});
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+const todayKey = kenyaDateKey();
+const todayIndex = dates.findIndex((date) => date.toISOString().slice(0, 10) === todayKey);
+let selectedIndex = todayIndex >= 0 ? todayIndex : 0;
+
+// ==========================================
+// 4. DATA SYNCING (CLOUD VS LOCAL)
+// ==========================================
+function initData() {
+  if (useCloud) {
+    document.querySelector('#sync-status').innerHTML = 'CONNECTING <b>•</b>';
+    docRef.onSnapshot((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        
+        // Apply remote data
+        Object.assign(sessionState.chloe, data.sessions?.chloe || {});
+        Object.assign(sessionState.brian, data.sessions?.brian || {});
+        Object.assign(notesState.chloe, data.notes?.chloe || {});
+        Object.assign(notesState.brian, data.notes?.brian || {});
+        Object.assign(savedState.chloe, data.saved?.chloe || {});
+        Object.assign(savedState.brian, data.saved?.brian || {});
+        
+        document.querySelector('#sync-status').innerHTML = 'LIVE SYNC <b>•</b>';
+      } else {
+        // Document doesn't exist, create it
+        docRef.set({ sessions: sessionState, notes: notesState, saved: savedState });
+      }
+      
+      // Re-render UI with new data
+      renderCalendar(activePerson);
+      renderSessions();
+      updateProgress();
+    });
+  } else {
+    // Fallback to LocalStorage
+    try {
+      const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      Object.assign(sessionState.chloe, saved.sessions?.chloe || {});
+      Object.assign(sessionState.brian, saved.sessions?.brian || {});
+      Object.assign(notesState.chloe, saved.notes?.chloe || {});
+      Object.assign(notesState.brian, saved.notes?.brian || {});
+      Object.assign(savedState.chloe, saved.saved?.chloe || {});
+      Object.assign(savedState.brian, saved.saved?.brian || {});
+    } catch (error) {}
+    
+    document.querySelector('#sync-status').innerHTML = 'LOCAL ONLY (No Firebase) <b>•</b>';
+    renderCalendar(activePerson);
+    renderSessions();
+    updateProgress();
+  }
+}
+
+function saveData() {
+  if (useCloud) {
+    docRef.set({
+      sessions: sessionState,
+      notes: notesState,
+      saved: savedState
+    }).catch(e => console.error("Error writing to Firestore: ", e));
+  } else {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify({ sessions: sessionState, notes: notesState, saved: savedState }));
+    } catch (error) {}
+  }
+}
+
+// ==========================================
+// 5. UI RENDERING
+// ==========================================
+function saveToday() {
+  const dateKey = dates[selectedIndex].toISOString().slice(0, 10);
+  if (savedState[activePerson][dateKey]) {
+    delete savedState[activePerson][dateKey];
+    saveData();
+    renderSessions('Changes unsaved');
+    return;
+  }
+  const noteInput = document.querySelector('#extra-note-input');
+  const note = noteInput ? noteInput.value.trim() : '';
+  if (note) notesState[activePerson][dateKey] = note;
+  else delete notesState[activePerson][dateKey];
+  savedState[activePerson][dateKey] = true;
+  saveData();
+  renderSessions('Saved just now');
+}
+
+function showToast(message) {
+  const existingToast = document.querySelector('.app-toast');
+  if (existingToast) existingToast.remove();
+  const toast = document.createElement('div');
+  toast.className = 'app-toast';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  window.setTimeout(() => toast.remove(), 2200);
+}
+
+function isLate(dateKey, sessionId) {
+  const scheduledTime = new Date(`${dateKey}T${sessionTimes[sessionId]}+03:00`).getTime();
+  return Date.now() - scheduledTime >= lateThreshold;
+}
+
+function celebrate(late = false) {
+  const celebration = document.createElement('div');
+  const name = activePerson === 'chloe' ? 'CHLOE' : 'BRIAN';
+  const marks = ['10', 'GO', '+', 'WIN', '*', '10', 'YES', 'OK', '★', '+', 'GO', 'DONE', '10', 'YAY', '★', 'NICE'];
+  const colors = ['#d8ed88', '#f0ad82', '#ead9a9', '#b9dce5', '#e9a9bd', '#cbb8e8', '#b5dfc0'];
+  celebration.className = 'celebration';
+  celebration.setAttribute('aria-live', 'polite');
+  const lateMessage = late ? `<strong class="late-message">tusizoeane ${activePerson}</strong>` : '';
+  celebration.innerHTML = `<div class="celebration-copy">${lateMessage}<strong class="celebration-title">${name} DID IT!</strong></div>${marks.map((mark, index) => `<span class="graffiti" style="--x:${7 + ((index * 6.1) % 89)}%;--delay:${(index % 6) * 0.06}s;--confetti:${colors[index % colors.length]};--rotate:${-24 + ((index * 17) % 48)}deg">${mark}</span>`).join('')}`;
+  document.body.appendChild(celebration);
+  window.setTimeout(() => celebration.remove(), 2200);
+}
+
+function dateLabel(date) {
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+}
+
+function updateProgress() {
+  Object.keys(sessionState).forEach((person) => {
+    const count = Object.values(sessionState[person]).filter(Boolean).length;
+    const unlogged = 62 - count;
+    const percent = Math.round((count / 62) * 100);
+    document.querySelector(`#${person}-completion-value`).textContent = `${percent}%`;
+    document.querySelector(`#${person}-completion-meter`).style.width = `${percent}%`;
+    document.querySelector(`#${person}-completion-copy`).textContent = `${count} completed · ${unlogged} unlogged`;
+  });
+  document.querySelectorAll('.person').forEach((button) => {
+    const count = Object.values(sessionState[button.dataset.person]).filter(Boolean).length;
+    button.querySelector('.person-progress').textContent = `${count} done · ${62 - count} unlogged`;
+  });
+}
+
+function renderSessions(saveMessage) {
+  if (saveMessage !== undefined) currentSaveMessage = saveMessage;
+  const date = dates[selectedIndex];
+  const dateKey = date.toISOString().slice(0, 10);
+  const workout = workouts[activePerson];
+  const dayIsSaved = Boolean(savedState[activePerson][dateKey]);
+  const sessions = [
+    { id: 'morning', label: '☼ MORNING', duration: workout.duration, title: workout.name, detail: workout.detail, time: '07:30 AM' },
+    { id: 'evening', label: '☾ EVENING', duration: workout.duration, title: workout.name, detail: workout.detail, time: '06:15 PM' },
+  ];
+  document.querySelector('#selected-date-label').textContent = `${dateKey === todayKey ? 'TODAY · ' : ''}${dateLabel(date)}`;
+  document.querySelector('#selected-day').textContent = date.getDate();
+  document.querySelector('#session-panel').innerHTML = sessions.map((session, index) => {
+    const completed = sessionState[activePerson][`${dateKey}-${session.id}`];
+    return `<div class="session-card ${index === 0 ? 'morning' : 'evening'}"><div class="session-top"><span class="session-type">${session.label}</span><span class="duration">${session.duration}</span></div><h3>${session.title}</h3><p>${session.detail}</p><div class="session-footer"><span>${session.time}</span><button class="complete-button${completed ? ' completed' : ''}" data-session="${session.id}">${completed ? 'Unlog workout' : 'Log after workout'} <span>✓</span></button></div></div>`;
+  }).join('') + `<div class="extra-note"><div class="extra-note-heading"><span>OPTIONAL EXTRA</span><span>1 line is plenty</span></div><label for="extra-note-input">What else did you do today?</label><textarea id="extra-note-input" maxlength="140" placeholder="e.g. Walked home from work...">${notesState[activePerson][dateKey] || ''}</textarea><button class="save-note" type="button">Save note <span>↗</span></button></div><div class="save-day-row"><button class="save-day-button${dayIsSaved ? ' saved' : ''}" id="save-day-button" type="button">${dayIsSaved ? 'Changes saved' : "Save today's workout"} <span>✓</span></button><span class="save-status">${currentSaveMessage || (dayIsSaved ? 'Click to unsave changes' : 'Changes save automatically')}</span></div>`;
+  
+  document.querySelectorAll('.complete-button').forEach((button) => {
+    button.addEventListener('click', () => {
+      const key = `${dateKey}-${button.dataset.session}`;
+      const wasCompleted = Boolean(sessionState[activePerson][key]);
+      if (wasCompleted) delete sessionState[activePerson][key];
+      else {
+        sessionState[activePerson][key] = true;
+        celebrate(isLate(dateKey, button.dataset.session));
+      }
+      delete savedState[activePerson][dateKey];
+      saveData();
+      // If using local mode, manually render. If cloud, onSnapshot will handle it.
+      if (!useCloud) {
+        renderSessions();
+        renderCalendar(activePerson);
+        updateProgress();
+      }
+    });
+  });
+  
+  document.querySelector('.save-note').addEventListener('click', () => {
+    const note = document.querySelector('#extra-note-input').value.trim();
+    if (note) notesState[activePerson][dateKey] = note;
+    else delete notesState[activePerson][dateKey];
+    saveData();
+    const saveNoteButton = document.querySelector('.save-note');
+    saveNoteButton.classList.add('saved');
+    saveNoteButton.innerHTML = 'Note saved <span>✓</span>';
+    if (!useCloud) showToast('Note saved locally');
+  });
+  
+  document.querySelector('#save-day-button').addEventListener('click', saveToday);
+}
+
+function renderCalendar(person = activePerson) {
+  calendar.innerHTML = '';
+  const workout = workouts[person];
+  const firstVisibleIndex = viewMode === 'week' ? Math.min(selectedIndex, dates.length - 7) : 0;
+  const visibleDates = viewMode === 'week' ? dates.slice(firstVisibleIndex, firstVisibleIndex + 7) : dates;
+  visibleDates.forEach((date) => {
+    const index = dates.indexOf(date);
+    const card = document.createElement('div');
+    const dateKey = date.toISOString().slice(0, 10);
+    const completedMorning = sessionState[person][`${dateKey}-morning`];
+    const completedEvening = sessionState[person][`${dateKey}-evening`];
+    const today = dateKey === todayKey;
+    card.className = `day${today ? ' today' : ''}${index === selectedIndex ? ' selected-day' : ''}`;
+    card.setAttribute('tabindex', '0');
+    card.innerHTML = `<div class="day-number"><span>${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}</span>${today ? '<span class="today-label">TODAY</span>' : ''}</div>
+      <div class="session-pill ${completedMorning ? 'done' : 'planned'}">${completedMorning ? 'AM · DONE' : `AM · ${workout.name}`}</div>
+      <div class="session-pill ${completedEvening ? 'done' : 'planned'}">${completedEvening ? 'PM · DONE' : `PM · ${workout.name}`}</div>`;
+    card.addEventListener('click', () => { selectedIndex = index; renderCalendar(activePerson); renderSessions(); });
+    card.addEventListener('keydown', (event) => { if (event.key === 'Enter') card.click(); });
+    calendar.appendChild(card);
+  });
+}
+
+// ==========================================
+// 6. EVENT LISTENERS
+// ==========================================
+document.querySelectorAll('.person').forEach((button) => {
+  button.addEventListener('click', () => {
+    document.querySelectorAll('.person').forEach((item) => item.classList.remove('active'));
+    button.classList.add('active');
+    activePerson = button.dataset.person;
+    renderCalendar(activePerson);
+    renderSessions();
+  });
+});
+
+document.querySelectorAll('.view-toggle button').forEach((button) => {
+  button.addEventListener('click', () => {
+    document.querySelectorAll('.view-toggle button').forEach((item) => item.classList.remove('selected'));
+    button.classList.add('selected');
+    viewMode = button.textContent.trim().toLowerCase();
+    renderCalendar(activePerson);
+  });
+});
+
+document.querySelectorAll('.arrow').forEach((button, index) => {
+  button.addEventListener('click', () => {
+    selectedIndex = Math.max(0, Math.min(dates.length - 1, selectedIndex + (index === 0 ? -1 : 1)));
+    renderCalendar(activePerson);
+    renderSessions();
+  });
+});
+
+document.querySelector('.icon-button').addEventListener('click', () => {
+  if (useCloud) showToast('Connected to the live shared database.');
+  else showToast('Running locally. Add Firebase config to sync.');
+});
+
+document.querySelector('.profile').addEventListener('click', () => {
+  const person = activePerson === 'chloe' ? 'Chloe.M' : 'Brian.M';
+  showToast(`Viewing ${person}'s schedule.`);
+});
+
+// Start the app
+initData();
+    </script>
   </body>
 </html>
