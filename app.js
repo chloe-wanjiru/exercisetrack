@@ -126,7 +126,7 @@ function renderCalendar(person = activePerson) {
     const today = dateKey === todayKey;
     card.className = `day${today ? ' today' : ''}${index === selectedIndex ? ' selected-day' : ''}`;
     card.setAttribute('tabindex', '0');
-    card.innerHTML = `<div class="day-number"><span>${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}</span>${today ? '<span class="today-label">START</span>' : ''}</div>
+    card.innerHTML = `<div class="day-number"><span>${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}</span>${today ? '<span class="today-label">TODAY</span>' : ''}</div>
       <div class="session-pill ${completedMorning ? 'done' : 'planned'}">${completedMorning ? 'AM · DONE' : `AM · ${workout.name}`}</div>
       <div class="session-pill ${completedEvening ? 'done' : 'planned'}">${completedEvening ? 'PM · DONE' : `PM · ${workout.name}`}</div>`;
     card.addEventListener('click', () => { selectedIndex = index; renderCalendar(activePerson); renderSessions(); });
