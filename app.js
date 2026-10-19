@@ -67,15 +67,16 @@ function dateLabel(date) {
 
 function updateProgress() {
   Object.keys(sessionState).forEach((person) => {
-    const count = Object.keys(sessionState[person]).length;
+    const count = Object.values(sessionState[person]).filter(Boolean).length;
+    const unlogged = 62 - count;
     const percent = Math.round((count / 62) * 100);
     document.querySelector(`#${person}-completion-value`).textContent = `${percent}%`;
     document.querySelector(`#${person}-completion-meter`).style.width = `${percent}%`;
-    document.querySelector(`#${person}-completion-copy`).textContent = `${count} of 62 sessions`;
+    document.querySelector(`#${person}-completion-copy`).textContent = `${count} completed · ${unlogged} unlogged`;
   });
   document.querySelectorAll('.person').forEach((button) => {
-    const count = Object.keys(sessionState[button.dataset.person]).length;
-    button.querySelector('.person-progress').textContent = `${count} / 62 sessions`;
+    const count = Object.values(sessionState[button.dataset.person]).filter(Boolean).length;
+    button.querySelector('.person-progress').textContent = `${count} done · ${62 - count} unlogged`;
   });
 }
 
@@ -96,7 +97,8 @@ function renderSessions(saveMessage = '') {
   document.querySelectorAll('.complete-button').forEach((button) => {
     button.addEventListener('click', () => {
       const key = `${dateKey}-${button.dataset.session}`;
-      sessionState[activePerson][key] = !sessionState[activePerson][key];
+      if (sessionState[activePerson][key]) delete sessionState[activePerson][key];
+      else sessionState[activePerson][key] = true;
       saveData();
       renderSessions();
       renderCalendar(activePerson);
