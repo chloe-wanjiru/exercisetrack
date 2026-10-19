@@ -61,6 +61,15 @@ function saveToday() {
   renderSessions('Saved just now');
 }
 
+function celebrate() {
+  const celebration = document.createElement('div');
+  celebration.className = 'celebration';
+  celebration.setAttribute('aria-live', 'polite');
+  celebration.innerHTML = '<strong>CONGRATS!</strong><span class="graffiti graffiti-one">10</span><span class="graffiti graffiti-two">GO</span><span class="graffiti graffiti-three">+</span><span class="graffiti graffiti-four">WIN</span><span class="graffiti graffiti-five">★</span>';
+  document.body.appendChild(celebration);
+  window.setTimeout(() => celebration.remove(), 2200);
+}
+
 function dateLabel(date) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
 }
@@ -97,8 +106,12 @@ function renderSessions(saveMessage = '') {
   document.querySelectorAll('.complete-button').forEach((button) => {
     button.addEventListener('click', () => {
       const key = `${dateKey}-${button.dataset.session}`;
-      if (sessionState[activePerson][key]) delete sessionState[activePerson][key];
-      else sessionState[activePerson][key] = true;
+      const wasCompleted = Boolean(sessionState[activePerson][key]);
+      if (wasCompleted) delete sessionState[activePerson][key];
+      else {
+        sessionState[activePerson][key] = true;
+        celebrate();
+      }
       saveData();
       renderSessions();
       renderCalendar(activePerson);
