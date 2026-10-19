@@ -63,9 +63,12 @@ function saveToday() {
 
 function celebrate() {
   const celebration = document.createElement('div');
+  const name = activePerson === 'chloe' ? 'CHLOE' : 'BRIAN';
+  const marks = ['10', 'GO', '+', 'WIN', '*', '10', 'YES', 'OK', '★', '+', 'GO', 'DONE', '10', 'YAY', '★', 'NICE'];
+  const colors = ['#d8ed88', '#f0ad82', '#ead9a9', '#b9dce5', '#e9a9bd', '#cbb8e8', '#b5dfc0'];
   celebration.className = 'celebration';
   celebration.setAttribute('aria-live', 'polite');
-  celebration.innerHTML = '<strong>CONGRATS!</strong><span class="graffiti graffiti-one">10</span><span class="graffiti graffiti-two">GO</span><span class="graffiti graffiti-three">+</span><span class="graffiti graffiti-four">WIN</span><span class="graffiti graffiti-five">★</span>';
+  celebration.innerHTML = `<strong>${name} DID IT!</strong>${marks.map((mark, index) => `<span class="graffiti" style="--x:${7 + ((index * 6.1) % 89)}%;--delay:${(index % 6) * 0.06}s;--confetti:${colors[index % colors.length]};--rotate:${-24 + ((index * 17) % 48)}deg">${mark}</span>`).join('')}`;
   document.body.appendChild(celebration);
   window.setTimeout(() => celebration.remove(), 2200);
 }
