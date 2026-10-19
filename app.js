@@ -13,7 +13,23 @@ const dates = Array.from({ length: 31 }, (_, index) => {
   return date;
 });
 let activePerson = 'chloe';
-let selectedIndex = 0;
+
+function kenyaDateKey(date = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Africa/Nairobi',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date).reduce((values, part) => {
+    values[part.type] = part.value;
+    return values;
+  }, {});
+  return `${parts.year}-${parts.month}-${parts.day}`;
+}
+
+const todayKey = kenyaDateKey();
+const todayIndex = dates.findIndex((date) => date.toISOString().slice(0, 10) === todayKey);
+let selectedIndex = todayIndex >= 0 ? todayIndex : 0;
 
 function loadSavedData() {
   try {
@@ -71,7 +87,7 @@ function renderSessions(saveMessage = '') {
     { id: 'morning', label: '☼ MORNING', duration: workout.duration, title: workout.name, detail: workout.detail, time: '07:30 AM' },
     { id: 'evening', label: '☾ EVENING', duration: workout.duration, title: workout.name, detail: workout.detail, time: '06:15 PM' },
   ];
-  document.querySelector('#selected-date-label').textContent = `${selectedIndex === 0 ? 'TODAY · ' : ''}${dateLabel(date)}`;
+  document.querySelector('#selected-date-label').textContent = `${dateKey === todayKey ? 'TODAY · ' : ''}${dateLabel(date)}`;
   document.querySelector('#selected-day').textContent = date.getDate();
   document.querySelector('#session-panel').innerHTML = sessions.map((session, index) => {
     const completed = sessionState[activePerson][`${dateKey}-${session.id}`];
@@ -107,7 +123,7 @@ function renderCalendar(person = activePerson) {
     const dateKey = date.toISOString().slice(0, 10);
     const completedMorning = sessionState[person][`${dateKey}-morning`];
     const completedEvening = sessionState[person][`${dateKey}-evening`];
-    const today = index === 0;
+    const today = dateKey === todayKey;
     card.className = `day${today ? ' today' : ''}${index === selectedIndex ? ' selected-day' : ''}`;
     card.setAttribute('tabindex', '0');
     card.innerHTML = `<div class="day-number"><span>${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}</span>${today ? '<span class="today-label">START</span>' : ''}</div>
