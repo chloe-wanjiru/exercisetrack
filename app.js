@@ -89,7 +89,7 @@ function celebrate() {
   const colors = ['#d8ed88', '#f0ad82', '#ead9a9', '#b9dce5', '#e9a9bd', '#cbb8e8', '#b5dfc0'];
   celebration.className = 'celebration';
   celebration.setAttribute('aria-live', 'polite');
-  celebration.innerHTML = `<strong>${name} DID IT!</strong>${marks.map((mark, index) => `<span class="graffiti" style="--x:${7 + ((index * 6.1) % 89)}%;--delay:${(index % 6) * 0.06}s;--confetti:${colors[index % colors.length]};--rotate:${-24 + ((index * 17) % 48)}deg">${mark}</span>`).join('')}`;
+  celebration.innerHTML = `<div class="celebration-copy"><strong class="late-message">tusizoeane ${activePerson}</strong><strong class="celebration-title">${name} DID IT!</strong></div>${marks.map((mark, index) => `<span class="graffiti" style="--x:${7 + ((index * 6.1) % 89)}%;--delay:${(index % 6) * 0.06}s;--confetti:${colors[index % colors.length]};--rotate:${-24 + ((index * 17) % 48)}deg">${mark}</span>`).join('')}`;
   document.body.appendChild(celebration);
   window.setTimeout(() => celebration.remove(), 2200);
 }
