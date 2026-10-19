@@ -7,6 +7,7 @@ const workouts = {
   chloe: { name: 'Squats', detail: '10 reps · bodyweight', duration: '10 REPS' },
   brian: { name: 'Press ups', detail: '10 reps · bodyweight', duration: '10 REPS' },
 };
+const sessionTimes = { morning: '07:30:00', evening: '18:15:00' };
 const startDate = new Date('2026-10-18T12:00:00');
 const dates = Array.from({ length: 31 }, (_, index) => {
   const date = new Date(startDate);
@@ -82,14 +83,20 @@ function showToast(message) {
   window.setTimeout(() => toast.remove(), 2200);
 }
 
-function celebrate() {
+function isLate(dateKey, sessionId) {
+  const scheduledTime = new Date(`${dateKey}T${sessionTimes[sessionId]}+03:00`).getTime();
+  return Date.now() - scheduledTime >= 24 * 60 * 60 * 1000;
+}
+
+function celebrate(late = false) {
   const celebration = document.createElement('div');
   const name = activePerson === 'chloe' ? 'CHLOE' : 'BRIAN';
   const marks = ['10', 'GO', '+', 'WIN', '*', '10', 'YES', 'OK', '★', '+', 'GO', 'DONE', '10', 'YAY', '★', 'NICE'];
   const colors = ['#d8ed88', '#f0ad82', '#ead9a9', '#b9dce5', '#e9a9bd', '#cbb8e8', '#b5dfc0'];
   celebration.className = 'celebration';
   celebration.setAttribute('aria-live', 'polite');
-  celebration.innerHTML = `<div class="celebration-copy"><strong class="late-message">tusizoeane ${activePerson}</strong><strong class="celebration-title">${name} DID IT!</strong></div>${marks.map((mark, index) => `<span class="graffiti" style="--x:${7 + ((index * 6.1) % 89)}%;--delay:${(index % 6) * 0.06}s;--confetti:${colors[index % colors.length]};--rotate:${-24 + ((index * 17) % 48)}deg">${mark}</span>`).join('')}`;
+  const lateMessage = late ? `<strong class="late-message">tusizoeane ${activePerson}</strong>` : '';
+  celebration.innerHTML = `<div class="celebration-copy">${lateMessage}<strong class="celebration-title">${name} DID IT!</strong></div>${marks.map((mark, index) => `<span class="graffiti" style="--x:${7 + ((index * 6.1) % 89)}%;--delay:${(index % 6) * 0.06}s;--confetti:${colors[index % colors.length]};--rotate:${-24 + ((index * 17) % 48)}deg">${mark}</span>`).join('')}`;
   document.body.appendChild(celebration);
   window.setTimeout(() => celebration.remove(), 2200);
 }
@@ -135,8 +142,7 @@ function renderSessions(saveMessage = '') {
       if (wasCompleted) delete sessionState[activePerson][key];
       else {
         sessionState[activePerson][key] = true;
-        celebrate();
-        if (dateKey < todayKey) showToast(`tusizoeane ${activePerson}`);
+        celebrate(isLate(dateKey, button.dataset.session));
       }
       delete savedState[activePerson][dateKey];
       saveData();
