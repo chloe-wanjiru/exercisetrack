@@ -13,6 +13,7 @@ const dates = Array.from({ length: 31 }, (_, index) => {
   return date;
 });
 let activePerson = 'chloe';
+let viewMode = 'month';
 
 function kenyaDateKey(date = new Date()) {
   const parts = new Intl.DateTimeFormat('en-GB', {
@@ -59,6 +60,16 @@ function saveToday() {
   else delete notesState[activePerson][dateKey];
   saveData();
   renderSessions('Saved just now');
+}
+
+function showToast(message) {
+  const existingToast = document.querySelector('.app-toast');
+  if (existingToast) existingToast.remove();
+  const toast = document.createElement('div');
+  toast.className = 'app-toast';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  window.setTimeout(() => toast.remove(), 2200);
 }
 
 function celebrate() {
@@ -136,7 +147,10 @@ function renderSessions(saveMessage = '') {
 function renderCalendar(person = activePerson) {
   calendar.innerHTML = '';
   const workout = workouts[person];
-  dates.forEach((date, index) => {
+  const firstVisibleIndex = viewMode === 'week' ? Math.min(selectedIndex, dates.length - 7) : 0;
+  const visibleDates = viewMode === 'week' ? dates.slice(firstVisibleIndex, firstVisibleIndex + 7) : dates;
+  visibleDates.forEach((date) => {
+    const index = dates.indexOf(date);
     const card = document.createElement('div');
     const dateKey = date.toISOString().slice(0, 10);
     const completedMorning = sessionState[person][`${dateKey}-morning`];
@@ -167,7 +181,23 @@ document.querySelectorAll('.view-toggle button').forEach((button) => {
   button.addEventListener('click', () => {
     document.querySelectorAll('.view-toggle button').forEach((item) => item.classList.remove('selected'));
     button.classList.add('selected');
+    viewMode = button.textContent.trim().toLowerCase();
+    renderCalendar(activePerson);
   });
+});
+
+document.querySelectorAll('.arrow').forEach((button, index) => {
+  button.addEventListener('click', () => {
+    selectedIndex = Math.max(0, Math.min(dates.length - 1, selectedIndex + (index === 0 ? -1 : 1)));
+    renderCalendar(activePerson);
+    renderSessions();
+  });
+});
+
+document.querySelector('.icon-button').addEventListener('click', () => showToast('All workout data is synced in this browser.'));
+document.querySelector('.profile').addEventListener('click', () => {
+  const person = activePerson === 'chloe' ? 'Chloe.M' : 'Brian.M';
+  showToast(`Viewing ${person}'s schedule.`);
 });
 
 loadSavedData();

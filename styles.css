@@ -118,6 +118,8 @@ h1 em { font-style: normal; color: var(--copper-bright); }
 .save-note.saved { background: var(--copper); }
 .save-day-button span { color: var(--lime); margin-left: 6px; }
 .save-status { color: var(--muted); font: 500 9px var(--mono); }
+.app-toast { position: fixed; right: 24px; bottom: 24px; z-index: 30; background: var(--ink); color: var(--cream); padding: 12px 15px; border-left: 3px solid var(--copper); font: 500 10px var(--mono); box-shadow: 0 12px 30px rgba(74,54,39,.16); animation: toast-in .2s ease-out both; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 .quote { background: var(--yellow); color: var(--ink); padding: 20px 22px; margin-top: 24px; }
 .quote-mark { font-size: 37px; line-height: .5; color: #9c7035; }
 .quote p { font-size: 16px; line-height: 1.35; letter-spacing: -.4px; margin: 9px 0 13px; }
