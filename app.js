@@ -8,6 +8,7 @@ const workouts = {
   brian: { name: 'Press ups', detail: '10 reps · bodyweight', duration: '10 REPS' },
 };
 const sessionTimes = { morning: '07:30:00', evening: '18:15:00' };
+const lateThreshold = 12 * 60 * 60 * 1000;
 const startDate = new Date('2026-10-18T12:00:00');
 const dates = Array.from({ length: 31 }, (_, index) => {
   const date = new Date(startDate);
@@ -85,7 +86,7 @@ function showToast(message) {
 
 function isLate(dateKey, sessionId) {
   const scheduledTime = new Date(`${dateKey}T${sessionTimes[sessionId]}+03:00`).getTime();
-  return Date.now() - scheduledTime >= 24 * 60 * 60 * 1000;
+  return Date.now() - scheduledTime >= lateThreshold;
 }
 
 function celebrate(late = false) {
